@@ -19,7 +19,7 @@ jobs:
       - name: Chunk spec files
         id: chunk-specs
         env:
-          PARALLEL_JOBS: 4
+          PARALLEL_JOBS: 3
         run: |
           # ✅ No -maxdepth — searches recursively through all subfolders
           SPECS=$(find cypress/e2e \( -name "*.cy.js" -o -name "*.spec.js" \) \
