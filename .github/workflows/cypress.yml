@@ -27,19 +27,34 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # 🔍 Debug: Check files & path
+      - name: Debug - List files
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files in repo:"
+          ls -la
+
+      # 🔍 Debug: Check Cypress version
+      - name: Check Cypress version
+        run: npx cypress version
+
+      # ✅ Ensure Cypress binary installed
       - name: Install Cypress binary
         run: npx cypress install
 
       - name: Verify Cypress
         run: npx cypress verify
 
+      # 🚀 Run tests using LOCAL Cypress (fixes version issue)
       - name: Run Cypress tests with Mochawesome
         run: |
-          npx cypress run \
+          ./node_modules/.bin/cypress run \
           --spec "cypress/e2e/${{ matrix.suite }}/**/*" \
           --reporter mochawesome \
           --reporter-options reportDir=reports/${{ matrix.suite }},overwrite=false,html=false,json=true
 
+      # 📦 Upload reports
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
