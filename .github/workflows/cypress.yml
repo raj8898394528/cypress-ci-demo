@@ -16,16 +16,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Cypress tests
-        uses: cypress-io/github-action@v6
+      # 🔥 Force correct Node (important for your deps too)
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          install: true
-          browser: electron
-          spec: cypress/e2e/${{ matrix.suite }}/**/*
-          config-file: cypress.config.js
-          reporter: mochawesome
-          reporter-options: reportDir=reports/${{ matrix.suite }},overwrite=false,html=false,json=true
+          node-version: 22
 
+      # 🔥 Install dependencies cleanly
+      - name: Install dependencies
+        run: npm ci
+
+      # 🔥 Force Cypress reinstall (kills 4.x issue)
+      - name: Clean Cypress cache
+        run: npx cypress cache clear
+
+      - name: Install Cypress binary
+        run: npx cypress install
+
+      # 🔍 Debug version (VERY IMPORTANT)
+      - name: Check Cypress version
+        run: npx cypress version
+
+      # 🚀 Run tests (with reporter)
+      - name: Run Cypress tests
+        run: |
+          npx cypress run \
+          --spec "cypress/e2e/${{ matrix.suite }}/**/*" \
+          --reporter mochawesome \
+          --reporter-options reportDir=reports/${{ matrix.suite }},overwrite=false,html=false,json=true
+
+      # 📦 Upload reports
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
