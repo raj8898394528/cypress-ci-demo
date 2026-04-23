@@ -4,10 +4,6 @@ on:
   push:
     branches: [ main ]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  CYPRESS_CACHE_FOLDER: ~/.cache/Cypress-v15   # 🔥 force new cache (avoids old 4.x)
-
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
@@ -20,47 +16,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
         with:
-          node-version: 22
+          install: true
+          browser: electron
+          spec: cypress/e2e/${{ matrix.suite }}/**/*
+          config-file: cypress.config.js
+          reporter: mochawesome
+          reporter-options: reportDir=reports/${{ matrix.suite }},overwrite=false,html=false,json=true
 
-      - name: Install dependencies
-        run: npm install
-
-      # 🔍 Debug: confirm files exist
-      - name: Debug - List files
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Files in repo:"
-          ls -la
-
-      # 🔥 Clear old Cypress cache (fix for 4.x issue)
-      - name: Clear Cypress cache
-        run: npx cypress cache clear
-
-      # ✅ Install correct Cypress binary (15.x)
-      - name: Install Cypress binary
-        run: npx cypress install
-
-      # ✅ Verify installation
-      - name: Verify Cypress
-        run: npx cypress verify
-
-      # 🔍 Confirm version (should be 15.x)
-      - name: Check Cypress version
-        run: ./node_modules/.bin/cypress version
-
-      # 🚀 Run tests with Mochawesome
-      - name: Run Cypress tests with Mochawesome
-        run: |
-          ./node_modules/.bin/cypress run \
-          --spec "cypress/e2e/${{ matrix.suite }}/**/*" \
-          --reporter mochawesome \
-          --reporter-options reportDir=reports/${{ matrix.suite }},overwrite=false,html=false,json=true
-
-      # 📦 Upload reports
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
