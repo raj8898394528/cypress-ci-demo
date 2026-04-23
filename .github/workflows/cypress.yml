@@ -11,13 +11,21 @@ jobs:
   cypress-run:
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    strategy:
+      matrix:
+        suite: [smoke, regression]
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - run: npm install
+      - name: Install dependencies
+        run: npm install
 
-      - run: npx cypress run --spec "cypress/e2e/smoke/**/*"
+      - name: Run Cypress tests
+        run: npx cypress run --spec "cypress/e2e/${{ matrix.suite }}/**/*"
