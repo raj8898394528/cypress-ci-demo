@@ -5,12 +5,34 @@ on:
     branches: [ main ]
 
 jobs:
+  # 🔹 STEP 1: Discover suites dynamically
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      suites: ${{ steps.find-suites.outputs.suites }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Discover test suites
+        id: find-suites
+        run: |
+          # Find all direct subdirectories under cypress/e2e/
+          SUITES=$(find cypress/e2e -mindepth 1 -maxdepth 1 -type d \
+            | xargs -I{} basename {} \
+            | jq -R . \
+            | jq -sc .)
+          echo "suites=$SUITES" >> $GITHUB_OUTPUT
+          echo "Discovered suites: $SUITES"
+
+  # 🔹 STEP 2: Run tests - matrix built from setup output
   cypress-run:
     runs-on: ubuntu-latest
+    needs: setup
     strategy:
-      fail-fast: false                        # 🔧 Don't cancel sibling on failure
+      fail-fast: false
       matrix:
-        suite: [smoke, regression]
+        suite: ${{ fromJson(needs.setup.outputs.suites) }}  # 🔑 Dynamic matrix
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,9 +45,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check Cypress version
-        run: npx cypress version
-
       - name: Run Cypress tests
         run: |
           npx cypress run \
@@ -35,17 +54,18 @@ jobs:
           --reporter-options "reportDir=reports/${{ matrix.suite }},overwrite=false,html=false,json=true"
 
       - name: Upload report artifact
-        if: always()                          # 🔧 Upload even on test failure
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: report-${{ matrix.suite }}
           path: reports/${{ matrix.suite }}
-          retention-days: 7                   # 🔧 Explicit retention
+          retention-days: 7
 
+  # 🔹 STEP 3: Merge + generate HTML (unchanged)
   merge-reports:
     runs-on: ubuntu-latest
     needs: cypress-run
-    if: always()                              # 🔧 Run even if cypress-run failed
+    if: always()
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,11 +85,11 @@ jobs:
 
       - name: Merge Mochawesome reports
         run: |
-          npx mochawesome-merge "reports/**/*.json" > merged-report.json   # 🔧 Fixed glob
+          npx mochawesome-merge "reports/**/*.json" > merged-report.json
 
       - name: Generate HTML report
         run: |
-          npx marge merged-report.json --reportDir final-report --inline   # 🔧 Self-contained HTML
+          npx marge merged-report.json --reportDir final-report --inline
 
       - name: Upload final HTML report
         uses: actions/upload-artifact@v4
