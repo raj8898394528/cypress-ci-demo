@@ -6,6 +6,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CYPRESS_CACHE_FOLDER: ~/.cache/Cypress-v15   # 🔥 force new cache (avoids old 4.x)
 
 jobs:
   cypress-run:
@@ -27,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 🔍 Debug: Check files & path
+      # 🔍 Debug: confirm files exist
       - name: Debug - List files
         run: |
           echo "Current directory:"
@@ -35,18 +36,23 @@ jobs:
           echo "Files in repo:"
           ls -la
 
-      # 🔍 Debug: Check Cypress version
-      - name: Check Cypress version
-        run: npx cypress version
+      # 🔥 Clear old Cypress cache (fix for 4.x issue)
+      - name: Clear Cypress cache
+        run: npx cypress cache clear
 
-      # ✅ Ensure Cypress binary installed
+      # ✅ Install correct Cypress binary (15.x)
       - name: Install Cypress binary
         run: npx cypress install
 
+      # ✅ Verify installation
       - name: Verify Cypress
         run: npx cypress verify
 
-      # 🚀 Run tests using LOCAL Cypress (fixes version issue)
+      # 🔍 Confirm version (should be 15.x)
+      - name: Check Cypress version
+        run: ./node_modules/.bin/cypress version
+
+      # 🚀 Run tests with Mochawesome
       - name: Run Cypress tests with Mochawesome
         run: |
           ./node_modules/.bin/cypress run \
