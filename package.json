@@ -11,8 +11,8 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "cypress": "^4.2.0",
-    "mochawesome": "^1.5.5",
+    "cypress": "^13.17.0",
+    "mochawesome": "^7.1.3",
     "mochawesome-merge": "^5.1.1",
     "mochawesome-report-generator": "^6.3.2"
   }
