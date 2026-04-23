@@ -27,5 +27,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run Cypress tests
-        run: npx cypress run --spec "cypress/e2e/${{ matrix.suite }}/**/*"
+      - name: Run Cypress tests with Mochawesome
+        run: |
+          npx cypress run \
+          --spec "cypress/e2e/${{ matrix.suite }}/**/*" \
+          --reporter mochawesome \
+          --reporter-options reportDir=reports/${{ matrix.suite }},overwrite=false,html=false,json=true
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-${{ matrix.suite }}
+          path: reports/${{ matrix.suite }}
