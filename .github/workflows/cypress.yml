@@ -27,6 +27,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Install Cypress binary
+        run: npx cypress install
+
+      - name: Verify Cypress
+        run: npx cypress verify
+
       - name: Run Cypress tests with Mochawesome
         run: |
           npx cypress run \
